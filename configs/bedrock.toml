@@ -1,0 +1,23 @@
+# AWS Bedrock Mode Configuration
+[mode]
+name = "bedrock"
+use_bedrock = true
+
+[aws]
+region = "us-east-1"
+profile = "default"
+
+[models]
+primary = "us.anthropic.claude-sonnet-4-5-20250929-v1:0"
+haiku = "us.anthropic.claude-haiku-4-5-20251001-v1:0"
+sonnet = "us.anthropic.claude-sonnet-4-5-20250929-v1:0"
+opus = "us.anthropic.claude-opus-4-5-20251101-v1:0"
+subagent = "us.anthropic.claude-haiku-4-5-20251001-v1:0"
+
+[performance]
+max_thinking_tokens = 1024
+disable_prompt_caching = false
+
+[optional]
+disable_telemetry = false
+playwright_headless = true

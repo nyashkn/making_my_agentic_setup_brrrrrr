@@ -1,0 +1,98 @@
+version: '3'
+
+vars:
+  CONFIG_DIR: ~/.claude/configs
+  REPO_DIR: "{{.ROOT_DIR}}"
+  UV: uv run
+
+tasks:
+  default:
+    desc: Show available commands
+    cmds:
+      - task --list
+
+  install:
+    desc: First-time setup
+    deps: [_check-uv]
+    cmds:
+      - mkdir -p {{.CONFIG_DIR}}
+      - {{.UV}} tools/install.py
+      - echo "Edit {{.CONFIG_DIR}}/personal.toml with your settings"
+
+  status:
+    desc: Show current mode and config
+    cmds:
+      - {{.UV}} tools/config.py status
+
+  switch:
+    desc: Switch mode (usage task switch -- anthropic|bedrock)
+    cmds:
+      - {{.UV}} tools/config.py switch {{.CLI_ARGS}}
+
+  validate:
+    desc: Validate current configuration
+    cmds:
+      - {{.UV}} tools/validate.py
+
+  update:
+    desc: Pull latest and sync configs
+    prompt: Pull latest changes?
+    cmds:
+      - git pull
+      - task: sync
+
+  sync:
+    desc: Compare templates with personal config
+    cmds:
+      - {{.UV}} tools/sync.py
+
+  # Skills management
+  skills:list:
+    desc: List available skills
+    cmds:
+      - ls -1 skills/
+
+  skills:install:
+    desc: Install skill (usage task skills:install -- skill-name)
+    cmds:
+      - {{.UV}} tools/config.py install-skill {{.CLI_ARGS}}
+
+  # Agents management
+  agents:list:
+    desc: List available agents
+    cmds:
+      - ls -1 agents/
+
+  agents:install:
+    desc: Install agent (usage task agents:install -- agent-name)
+    cmds:
+      - {{.UV}} tools/config.py install-agent {{.CLI_ARGS}}
+
+  # Settings management
+  settings:apply:
+    desc: Apply settings template
+    cmds:
+      - {{.UV}} tools/config.py apply-settings
+
+  settings:diff:
+    desc: Show diff between template and current
+    cmds:
+      - {{.UV}} tools/config.py diff-settings
+
+  # MCP management
+  mcp:list:
+    desc: List available MCP servers
+    cmds:
+      - ls -1 mcp/servers/
+
+  mcp:install:
+    desc: Install MCP server (usage task mcp:install -- server-name)
+    cmds:
+      - {{.UV}} tools/config.py install-mcp {{.CLI_ARGS}}
+
+  # Internal tasks
+  _check-uv:
+    internal: true
+    preconditions:
+      - sh: command -v uv
+        msg: "UV not installed. Install curl -LsSf https://astral.sh/uv/install.sh | sh"

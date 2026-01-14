@@ -1,0 +1,19 @@
+# Anthropic API Mode Configuration
+[mode]
+name = "anthropic"
+use_bedrock = false
+
+[models]
+primary = "claude-sonnet-4-5"
+haiku = "claude-haiku-4-5"
+sonnet = "claude-sonnet-4-5"
+opus = "claude-opus-4-5"
+subagent = "claude-haiku-4-5"
+
+[performance]
+disable_prompt_caching = false
+extended_context = false
+
+[optional]
+disable_telemetry = false
+playwright_headless = true

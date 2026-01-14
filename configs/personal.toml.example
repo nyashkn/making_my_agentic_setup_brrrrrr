@@ -1,0 +1,15 @@
+# Personal overrides - copy to ~/.claude/configs/personal.toml
+# Only specify what you want to override
+
+[aws]
+# region = "us-west-2"
+# profile = "work"
+
+[models]
+# primary = "claude-opus-4-5"  # Use Opus as default
+
+[performance]
+# disable_prompt_caching = true
+
+[optional]
+# disable_telemetry = true
