@@ -54,10 +54,20 @@ def install():
             console.print(f"[green]Added to {zshrc}[/green]")
             console.print(f"[yellow]Note: Shell functions sourced from {REPO_DIR}[/yellow]")
 
+    # Add claude-switch alias for convenience
+    alias_line = f"alias claude-switch='make -C {REPO_DIR} switch'"
+    if zshrc.exists():
+        content = zshrc.read_text()
+        if "alias claude-switch=" not in content:
+            with open(zshrc, "a") as f:
+                f.write(f"\n# Claude mode switching alias (switch from anywhere)\n{alias_line}\n")
+            console.print(f"[green]Added claude-switch alias to {zshrc}[/green]")
+
     console.print("\n[bold green]Installation complete![/bold green]")
     console.print(f"\n1. Edit: {personal_config}")
     console.print("2. Run: source ~/.zshrc")
-    console.print("3. Run: task status")
+    console.print("3. Run: make status")
+    console.print("\nTip: Use 'claude-switch' from anywhere to switch modes")
 
 
 if __name__ == "__main__":

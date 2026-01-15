@@ -7,7 +7,7 @@ Daily workflows and common operations.
 ### View Current Status
 
 ```bash
-task status
+make status
 ```
 
 Shows:
@@ -19,7 +19,7 @@ Shows:
 ### Validate Configuration
 
 ```bash
-task validate
+make validate
 ```
 
 Checks:
@@ -29,10 +29,48 @@ Checks:
 
 ## Mode Switching
 
+### Interactive Mode Switching
+
+Run `make switch` without arguments for interactive mode:
+
+```bash
+make switch
+```
+
+This will:
+1. Show your current mode
+2. Show the mode you'll switch to
+3. Ask for confirmation
+4. Switch if you confirm
+
+Example output:
+```
+Current mode: anthropic
+Switch to: bedrock
+
+Switch to bedrock mode? (y/N)
+```
+
+### Switch Using Alias (From Anywhere)
+
+After installation, you can use the `claude-switch` alias from any directory:
+
+```bash
+# Switch from anywhere (interactive)
+cd ~/any/directory
+claude-switch
+
+# Or specify mode directly
+claude-switch MODE=anthropic
+claude-switch MODE=bedrock
+```
+
+This is convenient as you don't need to be in the repository directory.
+
 ### Switch to Anthropic Mode
 
 ```bash
-task switch -- anthropic
+make switch MODE=anthropic
 ```
 
 Effects:
@@ -44,7 +82,7 @@ Effects:
 ### Switch to Bedrock Mode
 
 ```bash
-task switch -- bedrock
+make switch MODE=bedrock
 ```
 
 Effects:
@@ -67,19 +105,19 @@ echo $AWS_REGION
 ### Pull Latest Changes
 
 ```bash
-task update
+make update
 ```
 
 Workflow:
 1. Prompts for confirmation
 2. Runs `git pull`
-3. Shows config changes via `task sync`
+3. Shows config changes via `make sync`
 4. Instructions for manual updates
 
 ### Compare Templates
 
 ```bash
-task sync
+make sync
 ```
 
 Shows:
@@ -97,10 +135,10 @@ After reviewing changes:
 nano ~/.claude/configs/personal.toml
 
 # Re-apply configuration
-task switch -- anthropic  # or bedrock
+make switch MODE=anthropic  # or bedrock
 
 # Verify changes
-task status
+make status
 ```
 
 ## Skills Management
@@ -108,7 +146,7 @@ task status
 ### List Available Skills
 
 ```bash
-task skills:list
+make skills-list
 ```
 
 Shows all skills in repository.
@@ -116,7 +154,7 @@ Shows all skills in repository.
 ### Install a Skill
 
 ```bash
-task skills:install -- skill-name
+make skills-install SKILL=skill-name
 ```
 
 Copies from `./skills/skill-name` to `~/.claude/skills/skill-name`.
@@ -130,7 +168,7 @@ Skills in `~/.claude/skills/` are automatically available in Claude Code session
 ### List Available Agents
 
 ```bash
-task agents:list
+make agents-list
 ```
 
 Shows all agents in repository.
@@ -138,7 +176,7 @@ Shows all agents in repository.
 ### Install an Agent
 
 ```bash
-task agents:install -- agent-name
+make agents-install AGENT=agent-name
 ```
 
 Copies from `./agents/agent-name` to `~/.claude/agents/agent-name`.
@@ -152,7 +190,7 @@ Agents in `~/.claude/agents/` are automatically available in Claude Code session
 ### View Settings Diff
 
 ```bash
-task settings:diff
+make settings-diff
 ```
 
 Compares:
@@ -163,7 +201,7 @@ Compares:
 ### Apply Settings Template
 
 ```bash
-task settings:apply
+make settings-apply
 ```
 
 Applies template with variable substitution from:
@@ -176,7 +214,7 @@ Applies template with variable substitution from:
 ### List MCP Servers
 
 ```bash
-task mcp:list
+make mcp-list
 ```
 
 Shows available MCP server implementations.
@@ -184,7 +222,7 @@ Shows available MCP server implementations.
 ### Install MCP Server
 
 ```bash
-task mcp:install -- server-name
+make mcp-install MCP=server-name
 ```
 
 Installs MCP server from `./mcp/servers/server-name`.
@@ -195,10 +233,10 @@ Installs MCP server from `./mcp/servers/server-name`.
 
 ```bash
 # 1. Check current mode
-task status
+make status
 
 # 2. Switch if needed
-task switch -- anthropic
+make switch MODE=anthropic
 
 # 3. Start coding
 claude "help me with X"
@@ -211,12 +249,12 @@ claude "help me with X"
 git pull
 
 # 2. Check for new skills/agents
-task skills:list
-task agents:list
+make skills-list
+make agents-list
 
 # 3. Install if useful
-task skills:install -- new-skill
-task agents:install -- new-agent
+make skills-install SKILL=new-skill
+make agents-install AGENT=new-agent
 ```
 
 ### Updating After Pull
@@ -226,7 +264,7 @@ task agents:install -- new-agent
 git pull
 
 # 2. Check what changed
-task sync
+make sync
 
 # 3. Review changelog
 cat CHANGELOG.md
@@ -235,7 +273,7 @@ cat CHANGELOG.md
 nano ~/.claude/configs/personal.toml
 
 # 5. Re-apply
-task switch -- anthropic
+make switch MODE=anthropic
 ```
 
 ### Working on Multiple Machines
@@ -243,14 +281,14 @@ task switch -- anthropic
 **On Dev Laptop:**
 ```bash
 cd ~/Documents/dev_work/personal_productivity/making_my_agentic_setup_brrrrrr
-task status
+make status
 # Uses ~/.claude/configs/personal.toml
 ```
 
 **On VPS:**
 ```bash
 cd ~/making_my_agentic_setup_brrrrrr
-task status
+make status
 # Uses same ~/.claude/configs/personal.toml
 # Different repo location, same personal configs
 ```
@@ -259,7 +297,7 @@ task status
 
 ```bash
 # Validate configuration
-task validate
+make validate
 
 # Check environment loading
 claude-mode-load
@@ -267,7 +305,7 @@ env | grep ANTHROPIC
 env | grep CLAUDE
 
 # Re-apply mode
-task switch -- anthropic
+make switch MODE=anthropic
 
 # Check logs
 tail -f ~/.claude/logs/*.log  # if logging enabled
@@ -297,9 +335,9 @@ Key variables set by modes:
 
 ## Tips
 
-1. **Always validate after changes**: Run `task validate` after editing configs
+1. **Always validate after changes**: Run `make validate` after editing configs
 2. **Use personal overrides**: Don't modify base templates
-3. **Check sync regularly**: Run `task sync` after git pull
+3. **Check sync regularly**: Run `make sync` after git pull
 4. **Mode switching is instant**: No restart needed
 5. **Reload shell after install**: `source ~/.zshrc`
 
@@ -325,7 +363,7 @@ nano ~/.claude/configs/anthropic.env
 
 # Better: edit personal.toml and re-apply
 nano ~/.claude/configs/personal.toml
-task switch -- anthropic
+make switch MODE=anthropic
 ```
 
 ### Version Management

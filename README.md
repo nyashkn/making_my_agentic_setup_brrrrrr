@@ -13,24 +13,27 @@ Modern, portable configuration management for Claude Code agentic development en
 
 ## Stack
 
-- **Task** - Modern command runner (replaces Make + bash)
+- **Make** - Universal task automation (pre-installed on most systems)
 - **UV** - Fast Python package manager
 - **TOML** - Structured configs (replaces .env)
 - **Python 3.11+** - All logic in Python (no bash scripts)
 
 ## Prerequisites
 
-Install these first:
+### UV (Required)
+
+UV is the Python package manager.
 
 ```bash
-# UV (Python package manager)
 curl -LsSf https://astral.sh/uv/install.sh | sh
-
-# Task (command runner)
-brew install go-task  # macOS
-# or
-curl -sL https://taskfile.dev/install.sh | sh  # Linux
 ```
+
+**Verify installation:**
+```bash
+uv --version
+```
+
+**Note:** Make is used for task automation and is pre-installed on macOS and most Linux distributions.
 
 ## Quick Start
 
@@ -40,10 +43,10 @@ git clone <your-repo> ~/making_my_agentic_setup_brrrrrr
 cd ~/making_my_agentic_setup_brrrrrr
 
 # 2. Run installation
-task install
+make install
 # Prompts for mode (anthropic/bedrock)
 # Creates ~/.claude/configs/personal.toml
-# Adds shell integration to ~/.zshrc
+# Adds shell integration and claude-switch alias to ~/.zshrc
 
 # 3. Edit personal configs with your credentials
 nano ~/.claude/configs/personal.toml
@@ -52,7 +55,7 @@ nano ~/.claude/configs/personal.toml
 source ~/.zshrc
 
 # 5. Verify setup
-task status
+make status
 ```
 
 ## Repository Location Philosophy
@@ -78,39 +81,47 @@ task status
 
 ```bash
 # Show available commands
-task --list
+make help
 
 # Check current configuration
-task status
+make status
 
-# Switch modes
-task switch -- anthropic
-task switch -- bedrock
+# Switch modes (interactive - prompts for confirmation)
+make switch
+
+# Switch modes (direct)
+make switch MODE=anthropic
+make switch MODE=bedrock
+
+# Switch from anywhere (after install)
+claude-switch
+claude-switch MODE=anthropic
+claude-switch MODE=bedrock
 
 # Validate configuration
-task validate
+make validate
 
 # Check for updates
-task update
+make update
 
 # Compare templates with your config
-task sync
+make sync
 
 # Skills management
-task skills:list
-task skills:install -- skill-name
+make skills-list
+make skills-install SKILL=skill-name
 
 # Agents management
-task agents:list
-task agents:install -- agent-name
+make agents-list
+make agents-install AGENT=agent-name
 
 # Settings management
-task settings:apply
-task settings:diff
+make settings-apply
+make settings-diff
 
 # MCP management
-task mcp:list
-task mcp:install -- server-name
+make mcp-list
+make mcp-install MCP=server-name
 ```
 
 ## Configuration
@@ -152,21 +163,21 @@ disable_telemetry = true
 git pull
 
 # 2. Check what changed
-task sync
+make sync
 # Shows: version diff, changelog, new variables
 
 # 3. Review and update personal config
 nano ~/.claude/configs/personal.toml
 
 # 4. Re-apply configuration
-task switch -- anthropic  # or bedrock
+make switch MODE=anthropic  # or bedrock
 ```
 
 ## Structure
 
 ```
 making_my_agentic_setup_brrrrrr/
-├── Taskfile.yml              # All commands
+├── Makefile                  # All commands
 ├── configs/                  # TOML templates
 │   ├── anthropic.toml
 │   ├── bedrock.toml
@@ -223,24 +234,24 @@ git clone <repo> making_my_agentic_setup_brrrrrr
 cd making_my_agentic_setup_brrrrrr
 
 # Install and configure
-task install
+make install
 nano ~/.claude/configs/personal.toml  # Add credentials
-task status
+make status
 
 # New skill added to repo? Pull and install
 git pull
-task skills:list  # See new-awesome-skill
-task skills:install -- new-awesome-skill
+make skills-list  # See new-awesome-skill
+make skills-install SKILL=new-awesome-skill
 # Copies from ./skills/new-awesome-skill to ~/.claude/skills/new-awesome-skill
 
 # Switch modes anytime
-task switch -- bedrock
-task switch -- anthropic
+make switch MODE=bedrock
+make switch MODE=anthropic
 
 # On VPS - same workflow, different location
 cd ~
 git clone <repo> making_my_agentic_setup_brrrrrr
-task install
+make install
 # Uses same ~/.claude/configs but different repo location
 ```
 
@@ -251,7 +262,7 @@ task install
 - Personal overrides (don't duplicate configs)
 - Version tracking (know what changed)
 - Extensible (easy to add skills/agents/commands)
-- Modern stack (Task + UV + TOML)
+- Universal (Make + UV + TOML - works everywhere)
 
 ## Documentation
 

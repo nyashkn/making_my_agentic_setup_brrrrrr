@@ -122,6 +122,33 @@ def switch_mode(mode: str):
     status()
 
 
+def switch_interactive():
+    """Interactive mode switching - prompts to switch to other mode"""
+    from rich.prompt import Confirm
+
+    current_mode_file = CONFIG_DIR / "current_mode"
+
+    # Check if mode is configured
+    if not current_mode_file.exists():
+        console.print("[yellow]No mode configured. Run: task install[/yellow]")
+        sys.exit(1)
+
+    current_mode = current_mode_file.read_text().strip()
+
+    # Determine the other mode
+    other_mode = "bedrock" if current_mode == "anthropic" else "anthropic"
+
+    # Show current status
+    console.print(f"\n[cyan]Current mode:[/cyan] {current_mode}")
+    console.print(f"[cyan]Switch to:[/cyan] {other_mode}\n")
+
+    # Confirm switch
+    if Confirm.ask(f"Switch to {other_mode} mode?", default=False):
+        switch_mode(other_mode)
+    else:
+        console.print("[yellow]Switch cancelled[/yellow]")
+
+
 if __name__ == "__main__":
     import sys
 
@@ -138,6 +165,8 @@ if __name__ == "__main__":
             console.print("[red]Usage: config.py switch <mode>[/red]")
             sys.exit(1)
         switch_mode(sys.argv[2])
+    elif command == "switch-interactive":
+        switch_interactive()
     else:
         console.print(f"[red]Unknown command: {command}[/red]")
         sys.exit(1)
