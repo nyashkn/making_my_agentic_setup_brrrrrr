@@ -36,6 +36,15 @@ def install():
     current_mode_file = CONFIG_DIR / "current_mode"
     current_mode_file.write_text(mode)
 
+    # Generate initial .env file for the chosen mode
+    import sys
+    sys.path.insert(0, str(REPO_DIR / "tools"))
+    from config import load_config, apply_config
+
+    console.print(f"[cyan]Generating {mode}.env configuration...[/cyan]")
+    config = load_config(mode)
+    apply_config(config)
+
     # Save version
     version_file = REPO_DIR / "VERSION"
     if version_file.exists():
