@@ -1,0 +1,3 @@
+[submodule "external/cc-notifier"]
+	path = external/cc-notifier
+	url = https://github.com/Rendann/cc-notifier.git
