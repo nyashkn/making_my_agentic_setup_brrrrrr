@@ -34,13 +34,23 @@ console = Console()
 # Backend definitions
 BACKENDS = {
     "terminal-notifier": {
-        "name": "terminal-notifier (Recommended)",
+        "name": "terminal-notifier",
         "description": "Simple, cross-platform notifications with sound support",
         "dependencies": ["terminal-notifier (optional - falls back to osascript)"],
         "script": "terminal-notifier.sh",
         "template": "hooks-terminal-notifier.json.tmpl",
         "multi_instance": False,
         "click_to_focus": False,
+        "remote_support": False,
+    },
+    "claude-notifier": {
+        "name": "claude-notifier (Recommended)",
+        "description": "Comprehensive notifications with task tracking and editor integration",
+        "dependencies": ["terminal-notifier (optional - falls back to osascript)"],
+        "script": "claude-notifier.py",
+        "template": "hooks-claude-notifier.json.tmpl",
+        "multi_instance": False,
+        "click_to_focus": True,
         "remote_support": False,
     },
     "cc-notifier": {
@@ -90,6 +100,10 @@ def check_dependencies(backend: str) -> bool:
     missing = []
 
     for dep in backend_info["dependencies"]:
+        # Skip optional dependencies
+        if "(optional" in dep:
+            continue
+
         if dep == "Hammerspoon":
             if not Path("/Applications/Hammerspoon.app").exists():
                 missing.append(dep)
@@ -219,6 +233,7 @@ def enable_hooks(backend: str):
     template_str = json.dumps(template)
     template_str = template_str.replace("${REPO_DIR}", str(REPO_DIR))
     template_str = template_str.replace("${NOTIFICATION_SOUND}", notification_config.get("sound", "Glass"))
+    template_str = template_str.replace("${NOTIFICATION_EDITOR}", notification_config.get("editor", "zed"))
     template_str = template_str.replace("${PUSHOVER_API_TOKEN}", notification_config.get("pushover_api_token", ""))
     template_str = template_str.replace("${PUSHOVER_USER_KEY}", notification_config.get("pushover_user_key", ""))
 
@@ -270,6 +285,7 @@ def disable_hooks():
                     "cc-notifier" in str(h.get("command", ""))
                     or "osascript-notifier" in str(h.get("command", ""))
                     or "terminal-notifier.sh" in str(h.get("command", ""))
+                    or "claude-notifier.py" in str(h.get("command", ""))
                     for h in hook.get("hooks", [])
                 )
             ]
@@ -296,12 +312,22 @@ def test_notification(backend: Optional[str] = None):
     console.print(f"Sending test notification using {backend}...")
 
     # Create test JSON input
-    test_input = json.dumps({"type": "Stop", "workingDirectory": str(Path.cwd())})
+    if backend == "claude-notifier":
+        test_input = json.dumps({
+            "hook_event_name": "Stop",
+            "session_id": "test-session",
+            "cwd": str(Path.cwd()),
+        })
+    else:
+        test_input = json.dumps({"type": "Stop", "workingDirectory": str(Path.cwd())})
 
     if backend == "cc-notifier":
         console.print("[yellow]Note: cc-notifier requires a Claude session to be initialized first.[/yellow]\n")
         script = Path.home() / ".cc-notifier" / "cc-notifier"
         args = ["notify"]
+    elif backend == "claude-notifier":
+        script = NOTIFICATIONS_DIR / BACKENDS[backend]["script"]
+        args = ["Stop"]  # Test with Stop event
     else:
         # terminal-notifier
         script = NOTIFICATIONS_DIR / BACKENDS[backend]["script"]
