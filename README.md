@@ -7,6 +7,7 @@ Modern, portable configuration management for Claude Code agentic development en
 - Claude Code mode switching (Anthropic API / AWS Bedrock)
 - Portable across dev machines, VPS, home servers
 - Skills, agents, commands, and MCP tools management
+- **Multi-instance notifications** - Get notified when tasks complete across multiple terminal windows
 - Settings.json templates
 - Update detection with version tracking
 - Personal config overrides (merge pattern)
@@ -122,6 +123,12 @@ make settings-diff
 # MCP management
 make mcp-list
 make mcp-install MCP=server-name
+
+# Notifications
+make notifications-list                    # List notification backends
+make notifications-install BACKEND=<name>  # Install backend (osascript/terminal-notifier/cc-notifier)
+make notifications-enable BACKEND=<name>   # Enable notification hooks
+make notifications-test                    # Send test notification
 ```
 
 ## Configuration
@@ -155,6 +162,40 @@ disable_telemetry = true
 - AWS Bedrock API
 - Full ARNs: `us.anthropic.claude-sonnet-4-5-20250929-v1:0`
 - Requires AWS credentials
+
+## Notifications
+
+Get notified when Claude Code tasks complete or require input - especially useful when running multiple instances.
+
+### Quick Setup
+
+```bash
+# Simple setup (zero dependencies)
+make notifications-install BACKEND=osascript
+make notifications-enable BACKEND=osascript
+make notifications-test
+
+# Advanced setup (multi-instance aware, click-to-focus)
+make notifications-install BACKEND=cc-notifier
+make notifications-enable BACKEND=cc-notifier
+make notifications-test
+```
+
+### Available Backends
+
+- **osascript** - Native macOS, zero setup
+- **terminal-notifier** - Better branding, requires Homebrew
+- **cc-notifier** - Multi-instance tracking, click-to-focus, remote SSH support ⭐
+
+### Why Use Notifications?
+
+When running multiple Claude Code sessions in different terminals:
+- Know which instance finished a task
+- Get alerted when Claude needs permission or input
+- Click notification to jump to the relevant window (cc-notifier)
+- Receive push notifications over SSH (cc-notifier + Pushover)
+
+See `docs/notifications.md` for comprehensive guide.
 
 ## Update Workflow
 
@@ -266,6 +307,7 @@ make install
 
 ## Documentation
 
+- `docs/notifications.md` - Comprehensive notification system guide
 - `docs/setup.md` - Detailed setup guide
 - `docs/usage.md` - Usage patterns
 - `docs/extending.md` - Adding skills/agents/commands

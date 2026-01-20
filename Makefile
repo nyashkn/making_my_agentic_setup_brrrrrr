@@ -1,4 +1,4 @@
-.PHONY: help install status switch validate update sync skills-list skills-install agents-list agents-install settings-apply settings-diff mcp-list mcp-install _ensure-deps
+.PHONY: help install status switch validate update sync skills-list skills-install agents-list agents-install settings-apply settings-diff mcp-list mcp-install notifications-list notifications-install notifications-enable notifications-disable notifications-test notifications-status _ensure-deps
 
 CONFIG_DIR := ~/.claude/configs
 VENV := .venv
@@ -21,6 +21,12 @@ help:
 	@echo "  make settings-diff    - Show diff between template and current"
 	@echo "  make mcp-list         - List available MCP servers"
 	@echo "  make mcp-install MCP=<name> - Install MCP server"
+	@echo "  make notifications-list - List notification backends"
+	@echo "  make notifications-install [BACKEND=<name>] - Install backend (terminal-notifier or cc-notifier)"
+	@echo "  make notifications-enable BACKEND=<name> - Enable notification hooks"
+	@echo "  make notifications-disable - Disable notification hooks"
+	@echo "  make notifications-test [BACKEND=<name>] - Test notification system"
+	@echo "  make notifications-status - Show notification status"
 
 _ensure-deps:
 	@command -v uv >/dev/null 2>&1 || { echo "UV not installed. Run: curl -LsSf https://astral.sh/uv/install.sh | sh"; exit 1; }
@@ -94,3 +100,33 @@ ifndef MCP
 	@exit 1
 endif
 	@$(PYTHON) tools/config.py install-mcp $(MCP)
+
+notifications-list: _ensure-deps
+	@$(PYTHON) tools/notifications.py list
+
+notifications-install: _ensure-deps
+ifdef BACKEND
+	@$(PYTHON) tools/notifications.py install $(BACKEND)
+else
+	@$(PYTHON) tools/notifications.py install terminal-notifier
+endif
+
+notifications-enable: _ensure-deps
+ifndef BACKEND
+	@echo "Usage: make notifications-enable BACKEND=<terminal-notifier|cc-notifier>"
+	@exit 1
+endif
+	@$(PYTHON) tools/notifications.py enable $(BACKEND)
+
+notifications-disable: _ensure-deps
+	@$(PYTHON) tools/notifications.py disable
+
+notifications-test: _ensure-deps
+ifdef BACKEND
+	@$(PYTHON) tools/notifications.py test $(BACKEND)
+else
+	@$(PYTHON) tools/notifications.py test
+endif
+
+notifications-status: _ensure-deps
+	@$(PYTHON) tools/notifications.py status

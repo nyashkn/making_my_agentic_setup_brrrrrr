@@ -56,3 +56,5 @@ htmlcov/
 *.tmp
 *.bak
 .cache/
+
+.claude/settings.local.json

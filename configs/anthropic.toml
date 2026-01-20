@@ -17,3 +17,12 @@ extended_context = false
 [optional]
 disable_telemetry = false
 playwright_headless = true
+
+[notifications]
+# Simple cross-platform notifications (terminal-notifier)
+# For multi-instance tracking, use cc-notifier (requires Hammerspoon)
+backend = "terminal-notifier"
+sound = "Glass"
+# Optional: Pushover credentials for remote SSH notifications (cc-notifier only)
+pushover_api_token = ""
+pushover_user_key = ""
