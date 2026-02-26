@@ -12,6 +12,8 @@ This is a portable configuration management system for Claude Code that enables:
 
 ## Build & Development Commands
 
+### Setup & Configuration
+
 ```bash
 # Initial setup (creates venv, installs dependencies, sets up ~/.claude/)
 make install
@@ -46,6 +48,15 @@ make settings-diff
 make mcp-list
 make mcp-install MCP=server-name
 
+# Profile management (multiple Claude Code configurations)
+make profile-list                    # List all profiles
+make profile-create NAME=<name>      # Create new profile
+make profile-switch NAME=<name>      # Switch to profile
+make profile-clone SRC=<s> DEST=<d>  # Clone a profile
+make profile-status                  # Show active profile
+make profile-backup NAME=<name>      # Backup a profile
+make profile-migrate                 # Migrate ~/.claude to profiles
+
 # Notifications management
 make notifications-list                    # List available backends
 make notifications-install BACKEND=<name>  # Install a backend
@@ -54,6 +65,48 @@ make notifications-disable                 # Disable all notifications
 make notifications-test [BACKEND=<name>]   # Send test notification
 make notifications-status                  # Show notification status
 ```
+
+## Profile System
+
+**NEW**: Manage multiple Claude Code configurations with different skills, agents, hooks, and MCPs.
+
+### What Are Profiles?
+
+Profiles allow you to maintain separate Claude Code setups for different contexts:
+- **Work profile**: Company-specific skills and agents
+- **Personal profile**: Experimental configurations
+- **Minimal profile**: Lightweight setup for quick tasks
+- **Project profiles**: Per-project tool configurations
+
+### Quick Start
+
+```bash
+# Migrate your current ~/.claude to profile system
+make profile-migrate
+
+# Add shell integration (one-time)
+echo 'source ~/path/to/shell/profile-functions.sh' >> ~/.zshrc
+
+# Create and switch profiles
+make profile-create NAME=work
+ccp work  # Quick switch
+
+# Or use for one command
+CLAUDE_CONFIG_DIR=~/.claude-profiles/work claude
+```
+
+### Documentation
+
+- **Quick Start**: [docs/profiles-quickstart.md](docs/profiles-quickstart.md)
+- **Full Guide**: [docs/profiles.md](docs/profiles.md)
+
+Each profile has its own:
+- `skills/` - Installed skills
+- `agents/` - Custom agents
+- `hooks/` - TypeScript hooks
+- `mcp/` - MCP servers
+- `settings.json` - Settings
+- `configs/` - Mode configurations (anthropic/bedrock)
 
 ## Architecture
 

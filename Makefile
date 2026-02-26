@@ -1,4 +1,4 @@
-.PHONY: help install status switch validate update sync skills-list skills-install agents-list agents-install settings-apply settings-diff mcp-list mcp-install notifications-list notifications-install notifications-enable notifications-disable notifications-test notifications-status _ensure-deps
+.PHONY: help install status switch validate update sync skills-list skills-install agents-list agents-install settings-apply settings-diff mcp-list mcp-install notifications-list notifications-install notifications-enable notifications-disable notifications-test notifications-status profile-list profile-create profile-switch profile-clone profile-status profile-backup profile-migrate _ensure-deps
 
 CONFIG_DIR := ~/.claude/configs
 VENV := .venv
@@ -6,6 +6,8 @@ PYTHON := $(VENV)/bin/python3
 
 help:
 	@echo "Available commands:"
+	@echo ""
+	@echo "Setup & Configuration:"
 	@echo "  make install          - First-time setup"
 	@echo "  make status           - Show current mode and config"
 	@echo "  make switch           - Switch mode interactively"
@@ -13,14 +15,29 @@ help:
 	@echo "  make validate         - Validate current configuration"
 	@echo "  make update           - Pull latest and sync configs"
 	@echo "  make sync             - Compare templates with personal config"
+	@echo ""
+	@echo "Profile Management:"
+	@echo "  make profile-list               - List all Claude Code profiles"
+	@echo "  make profile-create NAME=<n>    - Create new profile"
+	@echo "  make profile-switch NAME=<n>    - Switch to profile"
+	@echo "  make profile-clone SRC=<s> DEST=<d> - Clone a profile"
+	@echo "  make profile-status             - Show active profile details"
+	@echo "  make profile-backup NAME=<n>    - Backup a profile"
+	@echo "  make profile-migrate            - Migrate ~/.claude to profiles"
+	@echo ""
+	@echo "Skills & Agents:"
 	@echo "  make skills-list      - List available skills"
 	@echo "  make skills-install SKILL=<name> - Install a skill"
 	@echo "  make agents-list      - List available agents"
 	@echo "  make agents-install AGENT=<name> - Install an agent"
+	@echo ""
+	@echo "Settings & MCP:"
 	@echo "  make settings-apply   - Apply settings template"
 	@echo "  make settings-diff    - Show diff between template and current"
 	@echo "  make mcp-list         - List available MCP servers"
 	@echo "  make mcp-install MCP=<name> - Install MCP server"
+	@echo ""
+	@echo "Notifications:"
 	@echo "  make notifications-list - List notification backends"
 	@echo "  make notifications-install [BACKEND=<name>] - Install backend (terminal-notifier or cc-notifier)"
 	@echo "  make notifications-enable BACKEND=<name> - Enable notification hooks"
@@ -130,3 +147,45 @@ endif
 
 notifications-status: _ensure-deps
 	@$(PYTHON) tools/notifications.py status
+
+# Profile management
+profile-list: _ensure-deps
+	@$(PYTHON) tools/profile.py list
+
+profile-create: _ensure-deps
+ifndef NAME
+	@echo "Usage: make profile-create NAME=profile-name"
+	@exit 1
+endif
+	@$(PYTHON) tools/profile.py create $(NAME)
+
+profile-switch: _ensure-deps
+ifndef NAME
+	@echo "Usage: make profile-switch NAME=profile-name"
+	@exit 1
+endif
+	@$(PYTHON) tools/profile.py switch $(NAME)
+
+profile-clone: _ensure-deps
+ifndef SRC
+	@echo "Usage: make profile-clone SRC=source-profile DEST=dest-profile"
+	@exit 1
+endif
+ifndef DEST
+	@echo "Usage: make profile-clone SRC=source-profile DEST=dest-profile"
+	@exit 1
+endif
+	@$(PYTHON) tools/profile.py clone $(SRC) $(DEST)
+
+profile-status: _ensure-deps
+	@$(PYTHON) tools/profile.py status
+
+profile-backup: _ensure-deps
+ifndef NAME
+	@echo "Usage: make profile-backup NAME=profile-name"
+	@exit 1
+endif
+	@$(PYTHON) tools/profile.py backup $(NAME)
+
+profile-migrate: _ensure-deps
+	@$(PYTHON) tools/profile.py migrate

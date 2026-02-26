@@ -5,6 +5,7 @@ Modern, portable configuration management for Claude Code agentic development en
 ## What This Does
 
 - Claude Code mode switching (Anthropic API / AWS Bedrock)
+- **Profile system** - Multiple isolated Claude Code configurations (NEW!)
 - Portable across dev machines, VPS, home servers
 - Skills, agents, commands, and MCP tools management
 - **Multi-instance notifications** - Get notified when tasks complete across multiple terminal windows
@@ -57,6 +58,10 @@ source ~/.zshrc
 
 # 5. Verify setup
 make status
+
+# 6. (Optional) Set up profiles for multiple configurations
+make profile-migrate  # Migrate ~/.claude to profile system
+# See docs/profiles-quickstart.md for more
 ```
 
 ## Repository Location Philosophy
@@ -129,6 +134,105 @@ make notifications-list                    # List notification backends
 make notifications-install BACKEND=<name>  # Install backend (osascript/terminal-notifier/cc-notifier)
 make notifications-enable BACKEND=<name>   # Enable notification hooks
 make notifications-test                    # Send test notification
+
+# Profile management
+make profile-list               # List all profiles
+make profile-create NAME=work   # Create new profile
+make profile-switch NAME=work   # Switch to profile
+make profile-clone SRC=default DEST=test  # Clone profile
+make profile-status             # Show active profile
+make profile-backup NAME=work   # Backup a profile
+make profile-migrate            # Migrate ~/.claude to profiles
+```
+
+## Profile System (NEW!)
+
+Manage multiple isolated Claude Code configurations.
+
+### Why Profiles?
+
+- **Separate contexts**: Work vs personal, testing vs production
+- **Safe experimentation**: Clone your setup, test new hooks without breaking existing config
+- **Project-specific**: Different tools for different projects
+- **Clean slate**: Minimal profiles for quick tasks
+
+### Quick Start
+
+```bash
+# Migrate your current ~/.claude (like Continuous Claude v3)
+make profile-migrate
+
+# Add shell integration (for quick switching)
+echo 'source ~/path/to/shell/profile-functions.sh' >> ~/.zshrc
+source ~/.zshrc
+
+# List profiles
+make profile-list   # or: ccp
+
+# Create new profile
+make profile-create NAME=work
+
+# Switch profiles
+ccp work              # Quick (current shell only)
+make profile-switch NAME=work  # Permanent
+
+# Or one-off usage
+CLAUDE_CONFIG_DIR=~/.claude-profiles/work claude
+```
+
+### Profile Structure
+
+```
+~/.claude-profiles/
+├── default/          # Your main profile (migrated from ~/.claude)
+│   ├── skills/
+│   ├── agents/
+│   ├── hooks/
+│   ├── mcp/
+│   └── settings.json
+├── work/             # Work-specific profile
+├── test/             # Experimental profile
+├── current -> default  # Active profile symlink
+└── backups/          # Automatic backups
+```
+
+### Documentation
+
+- **Quick Start**: [docs/profiles-quickstart.md](docs/profiles-quickstart.md) - Get running in 5 minutes
+- **Full Guide**: [docs/profiles.md](docs/profiles.md) - Usage patterns, troubleshooting, advanced features
+
+### Shell Functions
+
+After adding shell integration, you get:
+
+- `ccp` - Quick profile switcher (`ccp work`)
+- `ccp` - List profiles (no args)
+- `claude-profile-list` - List all profiles
+- `claude-profile-current` - Show active profile
+- Tab completion for profile names
+
+### Common Use Cases
+
+**Work vs Personal:**
+```bash
+ccp work      # Switch to work profile with company skills
+ccp default   # Back to personal setup
+```
+
+**Safe Testing:**
+```bash
+make profile-clone SRC=default DEST=test
+ccp test
+# Experiment with new hooks...
+# If broken, just: ccp default
+```
+
+**Per-Project:**
+```bash
+# In project dir with direnv
+echo 'export CLAUDE_CONFIG_DIR=~/.claude-profiles/project-alpha' > .envrc
+direnv allow
+# Auto-switches when entering directory
 ```
 
 ## Configuration

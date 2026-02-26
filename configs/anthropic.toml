@@ -4,10 +4,10 @@ name = "anthropic"
 use_bedrock = false
 
 [models]
-primary = "claude-sonnet-4-5"
+primary = "claude-sonnet-4-6"
 # primary = "claude-opus-4-6"
 haiku = "claude-haiku-4-5"
-sonnet = "claude-sonnet-4-5"
+sonnet = "claude-sonnet-4-6"
 opus = "claude-opus-4-6"
 subagent = "claude-haiku-4-5"
 

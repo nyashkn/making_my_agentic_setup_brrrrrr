@@ -58,3 +58,6 @@ htmlcov/
 .cache/
 
 .claude/settings.local.json
+.tldr/stats/hook_activity.jsonl
+.tldrignore
+.tldr/status
