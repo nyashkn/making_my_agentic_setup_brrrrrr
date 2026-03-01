@@ -34,7 +34,7 @@ claude-profile-use() {
     fi
 
     # Update symlink
-    ln -sfh "$profile_path" "${CLAUDE_PROFILES_DIR}/current"
+    ln -sfT "$profile_path" "${CLAUDE_PROFILES_DIR}/current"
 
     # Set environment for current shell
     export CLAUDE_CONFIG_DIR="$profile_path"
