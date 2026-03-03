@@ -4,6 +4,7 @@
 [aws]
 # region = "us-west-2"
 # profile = "work"
+# bearer_token = "your-bearer-token-here"  # Takes precedence over profile
 
 [models]
 # primary = "claude-opus-4-5"  # Use Opus as default

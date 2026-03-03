@@ -70,6 +70,9 @@ def _build_env_vars(config: Dict[str, Any]) -> Dict[str, str]:
     if mode["use_bedrock"] and "aws" in config:
         env_vars["AWS_REGION"] = config["aws"]["region"]
         env_vars["AWS_PROFILE"] = config["aws"]["profile"]
+        # Bearer token takes precedence over profile credentials
+        if config["aws"].get("bearer_token"):
+            env_vars["AWS_BEARER_TOKEN_BEDROCK"] = config["aws"]["bearer_token"]
 
     if performance.get("max_thinking_tokens"):
         env_vars["MAX_THINKING_TOKENS"] = str(performance["max_thinking_tokens"])

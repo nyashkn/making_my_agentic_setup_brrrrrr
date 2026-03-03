@@ -150,8 +150,17 @@ cc-kuze() {
         mv "${profile_dir}/.credentials.json" "${profile_dir}/.credentials.json.disabled"
     fi
 
-    export AWS_PROFILE="${CC_KUZE_AWS_PROFILE:-default}"
     export AWS_REGION="${CC_KUZE_AWS_REGION:-us-east-1}"
+
+    # Bearer token takes precedence over profile credentials
+    if [[ -n "$CC_KUZE_AWS_BEARER_TOKEN" ]]; then
+        export AWS_BEARER_TOKEN_BEDROCK="$CC_KUZE_AWS_BEARER_TOKEN"
+        echo "Using AWS bearer token authentication"
+    else
+        export AWS_PROFILE="${CC_KUZE_AWS_PROFILE:-default}"
+        echo "Using AWS profile: ${AWS_PROFILE}"
+    fi
+
     unset CLAUDE_CODE_OAUTH_TOKEN            # bedrock doesn't use OAuth
     export CLAUDE_CODE_USE_BEDROCK=1
     export CC_IDENTITY="kuze"

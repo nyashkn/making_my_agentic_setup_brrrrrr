@@ -6,6 +6,9 @@ use_bedrock = true
 [aws]
 region = "us-east-1"
 profile = "default"
+# Optional: Use bearer token instead of AWS profile credentials
+# If set, this takes precedence over profile-based authentication
+bearer_token = ""
 
 [models]
 primary = "us.anthropic.claude-sonnet-4-5-20250929-v1:0"
