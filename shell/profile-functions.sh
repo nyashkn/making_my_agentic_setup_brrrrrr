@@ -109,6 +109,7 @@ cc-kn() {
     _cc_load_credentials || return 1
     [[ -z "$CC_KN_OAUTH_TOKEN" ]] && { echo "⚠  CC_KN_OAUTH_TOKEN not set in credentials.env"; return 1; }
     export CLAUDE_CODE_OAUTH_TOKEN="$CC_KN_OAUTH_TOKEN"
+    export CLAUDE_CODE_USE_BEDROCK=0
     export CC_IDENTITY="kn"
     export CC_IDENTITY_DISPLAY="${CC_KN_NAME:-KN}"
     echo "✓ Identity: ${CC_IDENTITY_DISPLAY}"
@@ -119,6 +120,7 @@ cc-naisaie() {
     _cc_load_credentials || return 1
     [[ -z "$CC_NAISAIE_OAUTH_TOKEN" ]] && { echo "⚠  CC_NAISAIE_OAUTH_TOKEN not set in credentials.env"; return 1; }
     export CLAUDE_CODE_OAUTH_TOKEN="$CC_NAISAIE_OAUTH_TOKEN"
+    export CLAUDE_CODE_USE_BEDROCK=0
     export CC_IDENTITY="naisaie"
     export CC_IDENTITY_DISPLAY="${CC_NAISAIE_NAME:-Naisaie}"
     echo "✓ Identity: ${CC_IDENTITY_DISPLAY}"
@@ -130,6 +132,7 @@ cc-kuze() {
     export AWS_PROFILE="${CC_KUZE_AWS_PROFILE:-default}"
     export AWS_REGION="${CC_KUZE_AWS_REGION:-us-east-1}"
     unset CLAUDE_CODE_OAUTH_TOKEN            # bedrock doesn't use OAuth
+    export CLAUDE_CODE_USE_BEDROCK=1
     export CC_IDENTITY="kuze"
     export CC_IDENTITY_DISPLAY="${CC_KUZE_NAME:-Kuze}"
     make -C "$_CLAUDE_SETUP_DIR" switch MODE=bedrock
