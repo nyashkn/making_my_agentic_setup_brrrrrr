@@ -107,28 +107,49 @@ _cc_load_credentials() {
 # Switch to KN identity (Anthropic OAuth)
 cc-kn() {
     _cc_load_credentials || return 1
-    [[ -z "$CC_KN_OAUTH_TOKEN" ]] && { echo "⚠  CC_KN_OAUTH_TOKEN not set in credentials.env"; return 1; }
-    export CLAUDE_CODE_OAUTH_TOKEN="$CC_KN_OAUTH_TOKEN"
+    local profile_dir="${CLAUDE_CONFIG_DIR:-${HOME}/.claude-profiles/ecc}"
+
+    # Restore OAuth credentials if disabled
+    if [[ -f "${profile_dir}/.credentials.json.disabled" ]]; then
+        mv "${profile_dir}/.credentials.json.disabled" "${profile_dir}/.credentials.json"
+    fi
+
     export CLAUDE_CODE_USE_BEDROCK=0
+    unset AWS_PROFILE
+    unset AWS_REGION
     export CC_IDENTITY="kn"
     export CC_IDENTITY_DISPLAY="${CC_KN_NAME:-KN}"
-    echo "✓ Identity: ${CC_IDENTITY_DISPLAY}"
+    echo "✓ Identity: ${CC_IDENTITY_DISPLAY} (Anthropic OAuth)"
 }
 
 # Switch to Naisaie identity (Anthropic OAuth)
 cc-naisaie() {
     _cc_load_credentials || return 1
-    [[ -z "$CC_NAISAIE_OAUTH_TOKEN" ]] && { echo "⚠  CC_NAISAIE_OAUTH_TOKEN not set in credentials.env"; return 1; }
-    export CLAUDE_CODE_OAUTH_TOKEN="$CC_NAISAIE_OAUTH_TOKEN"
+    local profile_dir="${CLAUDE_CONFIG_DIR:-${HOME}/.claude-profiles/ecc}"
+
+    # Restore OAuth credentials if disabled
+    if [[ -f "${profile_dir}/.credentials.json.disabled" ]]; then
+        mv "${profile_dir}/.credentials.json.disabled" "${profile_dir}/.credentials.json"
+    fi
+
     export CLAUDE_CODE_USE_BEDROCK=0
+    unset AWS_PROFILE
+    unset AWS_REGION
     export CC_IDENTITY="naisaie"
     export CC_IDENTITY_DISPLAY="${CC_NAISAIE_NAME:-Naisaie}"
-    echo "✓ Identity: ${CC_IDENTITY_DISPLAY}"
+    echo "✓ Identity: ${CC_IDENTITY_DISPLAY} (Anthropic OAuth)"
 }
 
 # Switch to Kuze identity (AWS Bedrock)
 cc-kuze() {
     _cc_load_credentials || return 1
+    local profile_dir="${CLAUDE_CONFIG_DIR:-${HOME}/.claude-profiles/ecc}"
+
+    # Disable OAuth credentials so Bedrock takes priority
+    if [[ -f "${profile_dir}/.credentials.json" ]]; then
+        mv "${profile_dir}/.credentials.json" "${profile_dir}/.credentials.json.disabled"
+    fi
+
     export AWS_PROFILE="${CC_KUZE_AWS_PROFILE:-default}"
     export AWS_REGION="${CC_KUZE_AWS_REGION:-us-east-1}"
     unset CLAUDE_CODE_OAUTH_TOKEN            # bedrock doesn't use OAuth
