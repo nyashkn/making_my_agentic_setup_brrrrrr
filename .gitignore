@@ -37,6 +37,7 @@ Thumbs.db
 
 # Personal configs (never commit)
 configs/personal.toml
+configs/credentials.env
 
 # Logs and data (never commit)
 logs/

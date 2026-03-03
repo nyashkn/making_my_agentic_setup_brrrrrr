@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 """Claude Code configuration management"""
 import sys
+import os
+import json
 from pathlib import Path
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 import tomli
 import tomli_w
 from rich.console import Console
@@ -15,20 +17,32 @@ CONFIG_DIR = Path.home() / ".claude" / "configs"
 REPO_DIR = Path(__file__).parent.parent.resolve()
 
 
+def get_active_profile_dir() -> Optional[Path]:
+    """Detect active profile directory from CLAUDE_CONFIG_DIR or current symlink"""
+    env_dir = os.environ.get("CLAUDE_CONFIG_DIR")
+    if env_dir:
+        p = Path(env_dir)
+        if p.exists():
+            return p.resolve()
+
+    current_link = Path.home() / ".claude-profiles" / "current"
+    if current_link.exists() and current_link.is_symlink():
+        return current_link.resolve()
+
+    return None
+
+
 def load_config(mode: str) -> Dict[str, Any]:
     """Load mode config with personal overrides"""
-    # Load base config
     base_path = REPO_DIR / f"configs/{mode}.toml"
     with open(base_path, "rb") as f:
         config = tomli.load(f)
 
-    # Merge personal overrides
     personal_path = CONFIG_DIR / "personal.toml"
     if personal_path.exists():
         with open(personal_path, "rb") as f:
             personal = tomli.load(f)
 
-        # Deep merge
         for section, values in personal.items():
             if section in config:
                 config[section].update(values)
@@ -38,48 +52,101 @@ def load_config(mode: str) -> Dict[str, Any]:
     return config
 
 
-def apply_config(config: Dict[str, Any], dry_run: bool = False) -> None:
-    """Apply config to environment"""
+def _build_env_vars(config: Dict[str, Any]) -> Dict[str, str]:
+    """Build env var dict from config"""
     mode = config["mode"]
     models = config["models"]
     performance = config.get("performance", {})
     optional = config.get("optional", {})
 
-    exports = []
-    exports.append(f"export CLAUDE_CODE_USE_BEDROCK={'1' if mode['use_bedrock'] else '0'}")
-    exports.append(f"export ANTHROPIC_MODEL='{models['primary']}'")
-    exports.append(f"export ANTHROPIC_DEFAULT_HAIKU_MODEL='{models['haiku']}'")
-    exports.append(f"export ANTHROPIC_DEFAULT_SONNET_MODEL='{models['sonnet']}'")
-    exports.append(f"export ANTHROPIC_DEFAULT_OPUS_MODEL='{models['opus']}'")
-    exports.append(f"export CLAUDE_CODE_SUBAGENT_MODEL='{models['subagent']}'")
+    env_vars: Dict[str, str] = {}
+    env_vars["CLAUDE_CODE_USE_BEDROCK"] = "1" if mode["use_bedrock"] else "0"
+    env_vars["ANTHROPIC_MODEL"] = models["primary"]
+    env_vars["ANTHROPIC_DEFAULT_HAIKU_MODEL"] = models["haiku"]
+    env_vars["ANTHROPIC_DEFAULT_SONNET_MODEL"] = models["sonnet"]
+    env_vars["ANTHROPIC_DEFAULT_OPUS_MODEL"] = models["opus"]
+    env_vars["CLAUDE_CODE_SUBAGENT_MODEL"] = models["subagent"]
 
     if mode["use_bedrock"] and "aws" in config:
-        exports.append(f"export AWS_REGION='{config['aws']['region']}'")
-        exports.append(f"export AWS_PROFILE='{config['aws']['profile']}'")
+        env_vars["AWS_REGION"] = config["aws"]["region"]
+        env_vars["AWS_PROFILE"] = config["aws"]["profile"]
 
     if performance.get("max_thinking_tokens"):
-        exports.append(f"export MAX_THINKING_TOKENS={performance['max_thinking_tokens']}")
+        env_vars["MAX_THINKING_TOKENS"] = str(performance["max_thinking_tokens"])
 
     if performance.get("disable_prompt_caching"):
-        exports.append("export DISABLE_PROMPT_CACHING=1")
+        env_vars["DISABLE_PROMPT_CACHING"] = "1"
 
     if optional.get("disable_telemetry"):
-        exports.append("export DISABLE_TELEMETRY=1")
+        env_vars["DISABLE_TELEMETRY"] = "1"
 
     if optional.get("playwright_headless") is False:
-        exports.append("export PLAYWRIGHT_HEADLESS=false")
+        env_vars["PLAYWRIGHT_HEADLESS"] = "false"
 
+    return env_vars
+
+
+def apply_config(config: Dict[str, Any], dry_run: bool = False) -> None:
+    """Apply config — to active profile's settings.json, or legacy .env file"""
+    profile_dir = get_active_profile_dir()
+    env_vars = _build_env_vars(config)
+
+    if profile_dir:
+        _apply_to_profile(env_vars, config["mode"]["name"], profile_dir, dry_run)
+    else:
+        _apply_to_env_file(env_vars, config["mode"]["name"], dry_run)
+
+
+def _apply_to_profile(
+    env_vars: Dict[str, str],
+    mode_name: str,
+    profile_dir: Path,
+    dry_run: bool,
+) -> None:
+    """Merge model env vars into profile's settings.json env block"""
+    settings_path = profile_dir / "settings.json"
+
+    if settings_path.exists():
+        with open(settings_path) as f:
+            settings = json.load(f)
+    else:
+        settings = {"mcpServers": {}, "env": {}}
+
+    if dry_run:
+        console.print(f"\n[dim]Would update {settings_path}:[/dim]")
+        for k, v in env_vars.items():
+            console.print(f"  {k}={v}")
+        return
+
+    existing_env = settings.get("env", {})
+    existing_env.update(env_vars)
+    settings["env"] = existing_env
+
+    with open(settings_path, "w") as f:
+        json.dump(settings, f, indent=2)
+
+    console.print(f"[green]Applied {mode_name} config → {settings_path}[/green]")
+    console.print(f"[dim]  Profile: {profile_dir.name}[/dim]")
+
+
+def _apply_to_env_file(
+    env_vars: Dict[str, str],
+    mode_name: str,
+    dry_run: bool,
+) -> None:
+    """Legacy: write to ~/.claude/configs/<mode>.env (no active profile)"""
+    exports = [f"export {k}='{v}'" for k, v in env_vars.items()]
     script = "\n".join(exports)
 
     if dry_run:
         console.print(script)
     else:
-        out_file = CONFIG_DIR / f"{mode['name']}.env"
+        out_file = CONFIG_DIR / f"{mode_name}.env"
         out_file.write_text(script)
-        console.print(f"[green]Applied {mode['name']} config to {out_file}[/green]")
+        console.print(f"[green]Applied {mode_name} config to {out_file}[/green]")
 
 
-def status():
+def status() -> None:
     """Show current config status"""
     current_mode_file = CONFIG_DIR / "current_mode"
     if not current_mode_file.exists():
@@ -88,10 +155,17 @@ def status():
 
     mode = current_mode_file.read_text().strip()
     config = load_config(mode)
+    profile_dir = get_active_profile_dir()
 
     table = Table(title="Claude Code Configuration")
     table.add_column("Setting", style="cyan")
     table.add_column("Value", style="green")
+
+    if profile_dir:
+        table.add_row("Profile", profile_dir.name)
+        table.add_row("Profile Dir", str(profile_dir))
+    else:
+        table.add_row("Profile", "[dim]none (legacy mode)[/dim]")
 
     table.add_row("Mode", mode)
     table.add_row("Bedrock", str(config["mode"]["use_bedrock"]))
@@ -105,8 +179,37 @@ def status():
     console.print(table)
 
 
-def switch_mode(mode: str):
-    """Switch to a different mode"""
+def sync_profile() -> None:
+    """Re-apply current mode config to the active profile's settings.json"""
+    profile_dir = get_active_profile_dir()
+    if not profile_dir:
+        console.print("[yellow]No active profile detected.[/yellow]")
+        console.print("[dim]Set CLAUDE_CONFIG_DIR or use 'ccp <name>' first.[/dim]")
+        console.print("[dim]Falling back to legacy .env mode...[/dim]")
+
+    current_mode_file = CONFIG_DIR / "current_mode"
+    if not current_mode_file.exists():
+        console.print("[red]No mode configured. Run: make install[/red]")
+        return
+
+    mode = current_mode_file.read_text().strip()
+
+    if profile_dir:
+        console.print(
+            f"Syncing [cyan]{mode}[/cyan] config → "
+            f"profile [cyan]{profile_dir.name}[/cyan]"
+        )
+    else:
+        console.print(f"Syncing [cyan]{mode}[/cyan] config → legacy .env")
+
+    config = load_config(mode)
+    apply_config(config)
+    console.print()
+    status()
+
+
+def switch_mode(mode: str) -> None:
+    """Switch to a different mode and apply to active profile or .env"""
     if mode not in ["anthropic", "bedrock"]:
         console.print(f"[red]Invalid mode: {mode}[/red]")
         console.print("Available: anthropic, bedrock")
@@ -122,27 +225,21 @@ def switch_mode(mode: str):
     status()
 
 
-def switch_interactive():
-    """Interactive mode switching - prompts to switch to other mode"""
+def switch_interactive() -> None:
+    """Interactive mode switching — prompts to flip to other mode"""
     from rich.prompt import Confirm
 
     current_mode_file = CONFIG_DIR / "current_mode"
-
-    # Check if mode is configured
     if not current_mode_file.exists():
-        console.print("[yellow]No mode configured. Run: task install[/yellow]")
+        console.print("[yellow]No mode configured. Run: make install[/yellow]")
         sys.exit(1)
 
     current_mode = current_mode_file.read_text().strip()
-
-    # Determine the other mode
     other_mode = "bedrock" if current_mode == "anthropic" else "anthropic"
 
-    # Show current status
     console.print(f"\n[cyan]Current mode:[/cyan] {current_mode}")
     console.print(f"[cyan]Switch to:[/cyan] {other_mode}\n")
 
-    # Confirm switch
     if Confirm.ask(f"Switch to {other_mode} mode?", default=False):
         switch_mode(other_mode)
     else:
@@ -150,8 +247,6 @@ def switch_interactive():
 
 
 if __name__ == "__main__":
-    import sys
-
     if len(sys.argv) < 2:
         console.print("[red]Usage: config.py <command> [args][/red]")
         sys.exit(1)
@@ -167,6 +262,8 @@ if __name__ == "__main__":
         switch_mode(sys.argv[2])
     elif command == "switch-interactive":
         switch_interactive()
+    elif command == "sync-profile":
+        sync_profile()
     else:
         console.print(f"[red]Unknown command: {command}[/red]")
         sys.exit(1)

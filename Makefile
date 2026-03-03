@@ -1,4 +1,4 @@
-.PHONY: help install status switch validate update sync skills-list skills-install agents-list agents-install settings-apply settings-diff mcp-list mcp-install notifications-list notifications-install notifications-enable notifications-disable notifications-test notifications-status profile-list profile-create profile-switch profile-clone profile-status profile-backup profile-migrate _ensure-deps
+.PHONY: help install status switch validate update sync skills-list skills-install agents-list agents-install settings-apply settings-diff mcp-list mcp-install notifications-list notifications-install notifications-enable notifications-disable notifications-test notifications-status profile-list profile-create profile-switch profile-clone profile-status profile-backup profile-migrate profile-sync _ensure-deps
 
 CONFIG_DIR := ~/.claude/configs
 VENV := .venv
@@ -24,6 +24,7 @@ help:
 	@echo "  make profile-status             - Show active profile details"
 	@echo "  make profile-backup NAME=<n>    - Backup a profile"
 	@echo "  make profile-migrate            - Migrate ~/.claude to profiles"
+	@echo "  make profile-sync               - Re-apply config to active profile"
 	@echo ""
 	@echo "Skills & Agents:"
 	@echo "  make skills-list      - List available skills"
@@ -189,3 +190,6 @@ endif
 
 profile-migrate: _ensure-deps
 	@$(PYTHON) tools/profile.py migrate
+
+profile-sync: _ensure-deps
+	@$(PYTHON) tools/config.py sync-profile
