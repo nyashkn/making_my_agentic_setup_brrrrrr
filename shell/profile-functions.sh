@@ -107,13 +107,15 @@ _cc_load_credentials() {
 # Switch to KN identity (Anthropic OAuth)
 cc-kn() {
     _cc_load_credentials || return 1
+    [[ -z "$CC_KN_OAUTH_TOKEN" ]] && { echo "⚠  CC_KN_OAUTH_TOKEN not set in credentials.env"; return 1; }
     local profile_dir="${CLAUDE_CONFIG_DIR:-${HOME}/.claude-profiles/ecc}"
 
-    # Restore OAuth credentials if disabled
+    # Restore OAuth credentials file if disabled
     if [[ -f "${profile_dir}/.credentials.json.disabled" ]]; then
         mv "${profile_dir}/.credentials.json.disabled" "${profile_dir}/.credentials.json"
     fi
 
+    export CLAUDE_CODE_OAUTH_TOKEN="$CC_KN_OAUTH_TOKEN"
     export CLAUDE_CODE_USE_BEDROCK=0
     unset AWS_PROFILE
     unset AWS_REGION
@@ -125,13 +127,15 @@ cc-kn() {
 # Switch to Naisaie identity (Anthropic OAuth)
 cc-naisaie() {
     _cc_load_credentials || return 1
+    [[ -z "$CC_NAISAIE_OAUTH_TOKEN" ]] && { echo "⚠  CC_NAISAIE_OAUTH_TOKEN not set in credentials.env"; return 1; }
     local profile_dir="${CLAUDE_CONFIG_DIR:-${HOME}/.claude-profiles/ecc}"
 
-    # Restore OAuth credentials if disabled
+    # Restore OAuth credentials file if disabled
     if [[ -f "${profile_dir}/.credentials.json.disabled" ]]; then
         mv "${profile_dir}/.credentials.json.disabled" "${profile_dir}/.credentials.json"
     fi
 
+    export CLAUDE_CODE_OAUTH_TOKEN="$CC_NAISAIE_OAUTH_TOKEN"
     export CLAUDE_CODE_USE_BEDROCK=0
     unset AWS_PROFILE
     unset AWS_REGION
