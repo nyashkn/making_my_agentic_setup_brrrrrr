@@ -144,6 +144,7 @@ cc-kn() {
     unset AWS_PROFILE AWS_REGION AWS_BEARER_TOKEN_BEDROCK
     export CC_IDENTITY="kn"
     export CC_IDENTITY_DISPLAY="${CC_KN_NAME:-KN}"
+    make -C "$_CLAUDE_SETUP_DIR" switch MODE=anthropic
     echo "✓ Identity: ${CC_IDENTITY_DISPLAY} (Anthropic OAuth)"
 }
 
@@ -164,6 +165,7 @@ cc-naisaie() {
     unset AWS_PROFILE AWS_REGION AWS_BEARER_TOKEN_BEDROCK
     export CC_IDENTITY="naisaie"
     export CC_IDENTITY_DISPLAY="${CC_NAISAIE_NAME:-Naisaie}"
+    make -C "$_CLAUDE_SETUP_DIR" switch MODE=anthropic
     echo "✓ Identity: ${CC_IDENTITY_DISPLAY} (Anthropic OAuth)"
 }
 
