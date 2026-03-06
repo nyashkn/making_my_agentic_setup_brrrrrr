@@ -104,6 +104,29 @@ _cc_load_credentials() {
     source "$creds"
 }
 
+# Write token directly into profile's settings.json env block
+_cc_apply_anthropic_token() {
+    local token="$1"
+    local profile_dir="${CLAUDE_CONFIG_DIR:-${HOME}/.claude-profiles/ecc}"
+    local settings="${profile_dir}/settings.json"
+
+    python3 - "$settings" "$token" << 'PYEOF'
+import json, sys
+settings_path, token = sys.argv[1], sys.argv[2]
+with open(settings_path) as f:
+    s = json.load(f)
+env = s.setdefault("env", {})
+env["CLAUDE_CODE_OAUTH_TOKEN"] = token
+env["CLAUDE_CODE_USE_BEDROCK"] = "0"
+# Remove bedrock-specific keys
+for k in ["AWS_BEARER_TOKEN_BEDROCK", "AWS_PROFILE", "AWS_REGION"]:
+    env.pop(k, None)
+with open(settings_path, "w") as f:
+    json.dump(s, f, indent=2)
+print(f"  Applied to {settings_path}")
+PYEOF
+}
+
 # Switch to KN identity (Anthropic OAuth)
 cc-kn() {
     _cc_load_credentials || return 1
@@ -115,10 +138,10 @@ cc-kn() {
         mv "${profile_dir}/.credentials.json.disabled" "${profile_dir}/.credentials.json"
     fi
 
+    _cc_apply_anthropic_token "$CC_KN_OAUTH_TOKEN"
     export CLAUDE_CODE_OAUTH_TOKEN="$CC_KN_OAUTH_TOKEN"
     export CLAUDE_CODE_USE_BEDROCK=0
-    unset AWS_PROFILE
-    unset AWS_REGION
+    unset AWS_PROFILE AWS_REGION AWS_BEARER_TOKEN_BEDROCK
     export CC_IDENTITY="kn"
     export CC_IDENTITY_DISPLAY="${CC_KN_NAME:-KN}"
     echo "✓ Identity: ${CC_IDENTITY_DISPLAY} (Anthropic OAuth)"
@@ -135,10 +158,10 @@ cc-naisaie() {
         mv "${profile_dir}/.credentials.json.disabled" "${profile_dir}/.credentials.json"
     fi
 
+    _cc_apply_anthropic_token "$CC_NAISAIE_OAUTH_TOKEN"
     export CLAUDE_CODE_OAUTH_TOKEN="$CC_NAISAIE_OAUTH_TOKEN"
     export CLAUDE_CODE_USE_BEDROCK=0
-    unset AWS_PROFILE
-    unset AWS_REGION
+    unset AWS_PROFILE AWS_REGION AWS_BEARER_TOKEN_BEDROCK
     export CC_IDENTITY="naisaie"
     export CC_IDENTITY_DISPLAY="${CC_NAISAIE_NAME:-Naisaie}"
     echo "✓ Identity: ${CC_IDENTITY_DISPLAY} (Anthropic OAuth)"
