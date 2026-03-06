@@ -246,17 +246,20 @@ if [[ -n "$BASH_VERSION" ]]; then
 fi
 
 # Zsh completion for ccp
+# Use eval to prevent bash from parsing zsh-specific glob qualifier syntax (*(/N:t))
 if [[ -n "$ZSH_VERSION" ]]; then
+    eval '
     _ccp() {
         local -a profiles
         profiles=(${CLAUDE_PROFILES_DIR}/*(/N:t))
         profiles=(${profiles:#backups})
-        _describe 'profile' profiles
+        _describe "profile" profiles
     }
     # Only set up completion if compdef is available and _comps is initialized
     if (( $+functions[compdef] )) && [[ -n "${_comps}" ]]; then
         compdef _ccp ccp 2>/dev/null || true
     fi
+    '
 fi
 
 # Auto-load on shell startup
